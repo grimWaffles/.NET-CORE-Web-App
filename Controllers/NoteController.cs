@@ -23,11 +23,10 @@ namespace WebApplication1.Controllers
         [HttpGet("")]
         public IActionResult Index()
         {
-            
             //check if the user is authenticated
             var currentUser = HttpContext.User;
 
-            int id = GetUserModel(currentUser);
+            int id = CheckUserValidity(currentUser);
 
             if (id != 0)
             {
@@ -50,7 +49,7 @@ namespace WebApplication1.Controllers
         {
             var currentUser = HttpContext.User;
 
-            int id = GetUserModel(currentUser);
+            int id = CheckUserValidity(currentUser); //Reviews token to find if the suer crendentials match.
 
             if (id != 0)
             {
@@ -69,7 +68,7 @@ namespace WebApplication1.Controllers
             }
         }
 
-        private int GetUserModel(System.Security.Claims.ClaimsPrincipal currentUser)
+        private int CheckUserValidity(System.Security.Claims.ClaimsPrincipal currentUser)
         {
             if(currentUser.HasClaim(c => c.Type == "UserId"))
             {
@@ -80,7 +79,5 @@ namespace WebApplication1.Controllers
 
             return 0;
         }
-
-
     }
 }
