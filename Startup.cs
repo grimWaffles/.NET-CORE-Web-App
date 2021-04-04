@@ -25,32 +25,32 @@ namespace WebApplication1
         {
             services.AddControllersWithViews();
 
+            
+
             //Add the db service to the app
             //services.add<ContextClass>(enterOptions that we are using in the context class)
             services.AddDbContext<ApplicationDBContext>(options=>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
             );
 
-            var key = "thisisakey";
+            //add auth services to app
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options=> {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,  //Validates the server issuing the token
+                        ValidateAudience = true, //validates the client receiving the token
+                        ValidateLifetime = true, //validates the expiry date if any of the token
+                        ValidateIssuerSigningKey = true, //validate signature of token
+                       
+                        ValidIssuer = Configuration["Jwt:Issuer"], 
+                        ValidAudience = Configuration["Jwt:Issuer"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
+                    };
+                
+                });
 
-            services.AddAuthentication(x=> {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(x =>
-            {
-                x.RequireHttpsMetadata = false;
-                x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
-               
-            });
-
-            services.AddSingleton<IJwtAuthenticationManager>(new JwtAuthenticationManager(key));
+            //services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -13,16 +13,22 @@ namespace WebApplication1.Controllers
     [Route("[controller]")]
     public class NoteController : Controller
     {
-        private readonly ApplicationDBContext db; private readonly IJwtAuthenticationManager auth;
+        private readonly ApplicationDBContext db;
 
-        public NoteController(ApplicationDBContext context,IJwtAuthenticationManager auth)
+        public NoteController(ApplicationDBContext context)
         {
-            this.db = context; this.auth = auth;
+            this.db = context;
         }
 
-        [HttpGet("{id}")]
-        public IActionResult Index(int id)
+        [HttpGet("")]
+        public IActionResult Index()
         {
+            
+            //check if the user is authenticated
+            var currentUser = HttpContext.User;
+
+            int id = GetUserModel(currentUser);
+
             if (id != 0)
             {
                 var result = new JsonResult(db.Notes.Where(c => c.UserId == id));
@@ -31,7 +37,10 @@ namespace WebApplication1.Controllers
             }
             else
             {
-                return NotFound();
+                return new JsonResult(new
+                {
+                    message = "Id is " + id
+                }) ;
             }
         }
 
@@ -39,36 +48,39 @@ namespace WebApplication1.Controllers
         [Route("save")]
         public IActionResult Index([FromBody] Note note)
         {
+            var currentUser = HttpContext.User;
+
+            int id = GetUserModel(currentUser);
+
+            if (id != 0)
+            {
+                return Unauthorized();
+            }
+
             try
             {
                 db.Add(note); db.SaveChanges();
 
-                return Ok();
+                return Ok(note);
             }
             catch(Exception e)
             {
-                return new JsonResult(new
-                {
-                    message = "401 Could not save"
-                });
+                return Unauthorized();
             }
         }
 
-        [AllowAnonymous]
-        [HttpPost]
-        [Route("authenticate")]
-        public IActionResult Authenticate([FromQuery] string username,[FromQuery] string password)
+        private int GetUserModel(System.Security.Claims.ClaimsPrincipal currentUser)
         {
-            //check if user exists
-
-            var token = auth.Authenticate(username, password);
-
-            if (token != null)
+            if(currentUser.HasClaim(c => c.Type == "UserId"))
             {
-                return Ok(token);
+                int id = int.Parse(currentUser.Claims.First(c => c.Type == "UserId").Value);
+
+                return id;
             }
 
-            return Unauthorized();
+            return 0;
         }
+
+
     }
 }

@@ -11,7 +11,7 @@ namespace WebApplication1.Controllers
     
     public class UserController : Controller
     {
-        private readonly ApplicationDBContext db;private IJwtAuthenticationManager auth;
+        private readonly ApplicationDBContext db;
 
         public UserController(ApplicationDBContext context)
         {
@@ -44,7 +44,6 @@ namespace WebApplication1.Controllers
                     message = "401 Could not save"
                 });
             }
-
         }
     }
 }
